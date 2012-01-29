@@ -290,9 +290,13 @@ Only has effect when `ruby-use-smie' is nil."
 ;; FIXME Woefully under documented.  What is the point of the last t?.
 (defcustom ruby-deep-indent-paren '(?\( ?\[ ?\] t)
   "Deep indent lists in parenthesis when non-nil.
-The value t means continuous line.
-Also ignores spaces after parenthesis when `space'.
-Only has effect when `ruby-use-smie' is nil."
+May be a single character that triggers deep indenting, a list of
+characters which will engage deep indenting, or an association
+list of pairs with a character as the car and a boolean value for
+the cdr which controls whether deep indenting will be used for
+that character.  t means continuous line.  Also ignores spaces
+after parenthesis when `space'.  Only has effect when
+`ruby-use-smie' is nil."
   :type '(choice (const nil)
                  character
                  (repeat (choice character
@@ -1236,7 +1240,12 @@ delimiter."
                             (or (goto-char (cdr (nth 1 s))) t)))
                      (forward-word -1)
                      (setq indent (ruby-indent-size (current-column)
-						    (nth 2 state))))
+                                                    (nth 2 state))))
+                    ((save-excursion
+                       (skip-syntax-forward " ")
+                       (eolp))
+                     (setq indent
+                           (ruby-indent-size (ruby-current-indentation) 1)))
                     (t
                      (setq indent (current-column))
                      (cond ((eq deep 'space))
