@@ -1290,7 +1290,7 @@ delimiter."
              (not (bobp)))
            (or (ruby-deep-indent-paren-p t)
                (null (car (nth 1 state)))))
-          ;; goto beginning of non-empty no-comment line
+          ;; goto beginning of prior non-empty no-comment line
           (let (end done)
             (while (not done)
               (skip-chars-backward " \t\n")
@@ -1304,7 +1304,15 @@ delimiter."
           (skip-chars-backward " \t")
           (let (end (pos (point)))
             (beginning-of-line)
+            ;; Upstream causes a failure on:
+            ;;
+            ;;     :"@#{foo}"
+            ;;     try_indent_on_this_line
+            ;;
+            ;; Use of syntax-ppss in here is a hack (?) to avoid that.
             (while (and (re-search-forward "#" pos t)
+                        ;; Don't look at # inside a string
+                        (not (nth 3 (syntax-ppss end)))
                         (setq end (1- (point)))
                         (or (ruby-special-char-p end)
                             (and (setq state (ruby-parse-region
